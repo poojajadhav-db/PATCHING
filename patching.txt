@@ -1,0 +1,360 @@
+step1: download all patche by using oracle support 
+
+step2:take orcle home tar backup
+      take oracle home backup using root user
+	  chack space availability.
+	  stop all services running background.
+	  [root@oracle19c backup]# pwd
+/oracle/backup
+[root@oracle19c backup]# cd /oracle/app/oracle/product/19.0.0/dbhome_1
+[root@oracle19c dbhome_1]# cd ..
+[root@oracle19c 19.0.0]# pwd
+/oracle/app/oracle/product/19.0.0
+[root@oracle19c 19.0.0]# tar -cvf /oracle/backup/oracle_19c.tar dbhome_1/
+check listener and db should be down  
+0racle@PRODDB
+SR 3-28502533861 : Error while applying patch
+select owner, object_name, object_type from dba_Objects where object_name = 'UTL_TCP' order by 1,2;
+select owner, object_name, object_type from dba_Objects where status='INVALID';
+$ORACLE_HOME/OPatch/opatch lsinventory | grep applied
+apply the patch
+download pathch using oracle support
+unzip the patch    (winscape)
+download opatch utility
+run patch on opatch
+check patch status
+
+
+post patching steps
+start db
+run post patch scripts
+verify functionality
+take post patch backup
+
+documentation of process
+record detail like patch number,application time eny issue and resolution
+
+cd /oracle/app/oracle/product/19.0.0/dbhome_1(ORACLE_HOME)
+mv OPatch OPatch_bkp_14112024
+cd /backup/patches/
+unzip p6880880_230000_LINUX.zip -d /oracle/app/oracle/product/19.0.0/dbhome_1
+
+unzip p36199232_190000_Linux-x86-64.zip
+unzip p36233263_190000_Linux-x86-64.zip
+ 
+[oracle@isgmmlds017 26123830]$ ps -ef |grep ora kill everything
+[oracle@isgmmlds017 26123830]$ ps -ef |grep pmon
+ 
+export PATH=$ORACLE_HOME/bin:$PATH:$ORACLE_HOME/OPatch
+opatch lspatches
+opatch lsinv | grep applied
+opatch version
+
+opatch prereq -h
+cd /patch/36233263
+
+opatch prereq CheckConflictAgainstOHWithDetail -ph .
+opatch prereq CheckActiveFilesAndExecutables -ph .
+
+[oracle@isgmmlds017 26123830]$ opatch version
+OPatch Version: 12.2.0.1.6
+OPatch succeeded.
+
+cd /backup/patches/36199232
+
+opatch prereq CheckConflictAgainstOHWithDetail -ph .
+opatch prereq CheckActiveFilesAndExecutables -ph .
+
+cd /patch/36233263
+
+opatch apply
+
+/backup/patch/36199232
+
+opatch apply
+
+
+SQL> startup
+
+give below grants before run utlrp
+
+grant EXECUTE on DBMS_BACKUP_RESTORE to PUBLIC;
+grant EXECUTE on DBMS_JOB to PUBLIC;
+grant EXECUTE on DBMS_LOB to PUBLIC;
+grant EXECUTE on DBMS_OBFUSCATION_TOOLKIT to PUBLIC;
+grant EXECUTE on DBMS_RANDOM to PUBLIC;
+grant EXECUTE on DBMS_SQL to PUBLIC;
+grant EXECUTE on DBMS_SYS_SQL to PUBLIC;
+grant EXECUTE on UTL_FILE to PUBLIC;
+grant EXECUTE on UTL_HTTP to PUBLIC;
+grant EXECUTE on UTL_SMTP to PUBLIC;
+grant EXECUTE on UTL_TCP to PUBLIC;
+grant EXECUTE on DBMS_XMLGEN to PUBLIC;
+grant EXECUTE on DBMS_SCHEDULER to PUBLIC;
+
+@?/rdbms/admin/utlrp
+
+1.) Check valid or invalid componants :
+--------------------------------------------------------------------------------------------------
+select name,open_mode,log_mode,database_role from v$database;
+
+set lines 1221 pages 999
+col COMP_NAME for a40
+col BANNER for a90
+select * from v$version;
+
+select substr(comp_name,1,40) comp_name, status, substr(version,1,10) version from dba_registry order by comp_name;
+
+exec sys.dbms_registry.loaded ('JAVAVM');
+exec sys.dbms_registry.valid ('JAVAVM');
+ 
+cd $ORACLE_HOME/OPatch
+[oracle@isgmmlds017 OPatch]$ ./datapatch -verbose
+SQL Patching tool version 12.2.0.1.0 Production on Sat Jul 29 07:33:51 2017
+Copyright (c) 2012, 2017, Oracle.  All rights reserved.
+ 
+Log file for this invocation: /u01/app/oracle/cfgtoollogs/sqlpatch/sqlpatch_19578_2017_07_29_07_33_51/sqlpatch_invocation.log
+ 
+Connecting to database...OK
+Bootstrapping registry and package to current versions...done
+Determining current state...done
+ 
+Current state of SQL patches:
+Bundle series DBRU:
+  ID 170718 in the binary registry and not installed in the SQL registry
+ 
+Adding patches to installation queue and performing prereq checks...
+Installation queue:
+  Nothing to roll back
+  The following patches will be applied:
+    26123830 (DATABASE RELEASE UPDATE 12.2.0.1.170718)
+ 
+Installing patches...
+Patch installation complete.  Total patches installed: 1
+ 
+Validating logfiles...
+Patch 26123830 apply: SUCCESS
+  logfile: /u01/app/oracle/cfgtoollogs/sqlpatch/26123830/21405588/26123830_apply_JNK_2017Jul29_07_34_04.log (no errors)
+SQL Patching tool complete on Sat Jul 29 07:34:54 2017
+ 
+====================================end=========================================================
+ if any invalid components:
+ 
+ select comp_id, status from dba_registry where comp_id = 'SDO';
+ 
+ connect / as sysdba
+GRANT EXECUTE ON UTL_TCP TO MDSYS;
+
+ALTER PACKAGE MDSYS.SEM_RDFCTX_DR COMPILE;
+
+
+
+grant EXECUTE on DBMS_BACKUP_RESTORE to PUBLIC;
+grant EXECUTE on DBMS_JOB to PUBLIC;
+grant EXECUTE on DBMS_LOB to PUBLIC;
+grant EXECUTE on DBMS_OBFUSCATION_TOOLKIT to PUBLIC;
+grant EXECUTE on DBMS_RANDOM to PUBLIC;
+grant EXECUTE on DBMS_SQL to PUBLIC;
+grant EXECUTE on DBMS_SYS_SQL to PUBLIC;
+grant EXECUTE on UTL_FILE to PUBLIC;
+grant EXECUTE on UTL_HTTP to PUBLIC;
+grant EXECUTE on UTL_SMTP to PUBLIC;
+grant EXECUTE on UTL_TCP to PUBLIC;
+ 
+ 
+ 
+[oracle@isgmmlds017 OPatch]$ opatch lsinventory |grep applied
+Patch  26123830     : applied on Fri Jul 28 03:33:48 IST 2017
+ 
+[oracle@isgmmlds017 OPatch]$ !sq
+ 
+ 
+SQL> desc dba_registry_sqlpatch
+SQL> select PATCH_ID, VERSION ,STATUS,ACTION from dba_registry_sqlpatch;
+
+col version format a20
+col ACTION_TIME format a30
+col ACTION format a15
+col version format a15
+col status format a15
+col bundle_series format a15
+col DESCRIPTION format a30
+set lines 200 pages 100
+col TARGET_BUILD_DESCRIPTION for a30
+select PATCH_UID,PATCH_ID,ACTION,STATUS,ACTION_TIME,DESCRIPTION from dba_registry_sqlpatch;
+spool off
+
+ 
+  PATCH_ID VERSION STATUS ACTION
+---------- -------------------- --------------- ---------------
+  24732082 0 
+SUCCESS  APPLY
+  26123830 12.2.0.1 SUCCESS  APPLY
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Steps to be followed for opatch apply (12c)
+
+ select owner, object_name, object_type, status
+from dba_objects
+where status = 'INVALID'
+and owner = 'MDSYS';
+
+ 
+ 
+
+26710464 ---rdbms
+
+26635944  --ojvm
+
+ 
+
+Extract zip file p26636004_122010_Linux-x86-64.zip
+
+ set serveroutput on
+exec SYS.VALIDATE_SDO;
+
+
+---for ojvm
+
+Go to 26635944  and Check conflicts 
+
+ 
+
+# cd 26635944  
+
+# opatch prereq CheckConflictAgainstOHWithDetail -ph ./
+
+(Resolve if any conflicts and then apply the patch)
+
+# opatch apply 
+
+ 
+
+Post Installation steps :
+
+ 
+
+sqlplus / as sysdba
+
+
+SQL> Startup upgrade
+
+SQL >Exit
+
+SQL>shut immediate;
+
+ 
+
+# cd $ORACLE_HOME/Opatch
+
+# ./datapatch -verbose
+
+ 
+
+---for rdbms
+
+Go to 26710464 and Check conflicts 
+
+ 
+
+# cd 26710464
+
+# opatch prereq CheckConflictAgainstOHWithDetail -ph ./
+
+(Resolve if any conflicts and then apply the patch)
+
+# opatch apply 
+
+opatch lspatches
+
+ 
+
+Post Installation steps :
+
+ 
+
+# sqlplus / as sysdba
+
+SQL> startup
+
+SQL >Exit
+
+ 
+
+# cd $ORACLE_HOME/OPatch
+
+# ./datapatch -verbose
+
+ ===============================================================================================================
+DBMS_AUDIT_MGMT : invalid
+ 
+ 
+ SQL> GRANT ANALYZE ANY DICTIONARY TO "AUDSYS";
+
+Grant succeeded.
+
+SQL> GRANT SELECT ANY DICTIONARY TO "AUDSYS";
+
+Grant succeeded.
+
+SQL>  alter package AUDSYS.DBMS_AUDIT_MGMT compile body;
+
+Package body altered.
+ ============================================================
+ 
+opatch rollback -id 15941858
+
+
+****************Prerequisite check “CheckActiveFilesAndExecutables” failed**********************
+
+
+Following active files/executables/libs are used by ORACLE_HOME :/oracle19c/app/oracle/product/19.0/dbhome_1
+/oracle19c/app/oracle/product/19.0/dbhome_1/bin/oracle
+/oracle19c/app/oracle/product/19.0/dbhome_1/lib/libclntsh.so.19.1
+/oracle19c/app/oracle/product/19.0/dbhome_1/lib/libsqlplus.so
+
+
+-bash-4.4$ /sbin/fuser /oracle19c/app/oracle/product/19.0/dbhome_1/bin/oracle                                                                                           /oracle19c/app/oracle/product/19.0/dbhome_1/bin/oracle: 1384272e 1384283e
+
+-bash-4.4$ kill -9 1384272 1384283
+
+/sbin/fuser /oracle/app/oracle/product/19.0.0/dbhome_1/lib/libclntsh.so.19.1
+/sbin/fuser /oracle/app/oracle/product/19.0.0/dbhome_1/lib/libsqlplus.so
+
+============================================================================================
+Prereq "checkConflictAgainstOHWithDetail" is not executed.
+PrereqSession failed: OPatch failed to locate Central Inventory.
+Possible causes are:
+    The Central Inventory is corrupted
+    The oraInst.loc file specified is not valid.
+
+
+vi /etc/oraInst.loc
+
+inventory_loc=/oracle/app/oraInventory
+inst_group=oinstall
+
+chown -R oracle:oinstall /etc/oraInst.loc
+chmod 775 /etc/oraInst.loc
+
+mkdir -p /oracle/app/oraInventory
+
+./runInstaller -silent -ignoreSysPrereqs -attachHome -invPtrLoc  /etc/oraInst.loc  ORACLE_HOME="/oracle/app/oracle/product/19.0.0/dbhome_1"  ORACLE_HOME_NAME="19C_DB_Home"
+
+[oracle@CPCLNXDB048 oraInventory]$ cd /oracle/app/oraInventory
+[oracle@CPCLNXDB048 oraInventory]$ ls -lrt
+-rwxrwxr-x 1 oracle oinstall  171 Oct  7 10:44 oraInst.loc_bkp
+drwxrwx--- 2 oracle oinstall 4096 Oct  7 10:58 logs
+drwxrwx--- 2 oracle oinstall 4096 Oct  7 10:58 ContentsXML
+[oracle@CPCLNXDB048 oraInventory]$ cd ContentsXML
+[oracle@CPCLNXDB048 ContentsXML]$ ls -lrt
+-rw-rw---- 1 oracle oinstall 480 Oct  7 10:58 inventory.xml
+-rw-rw---- 1 oracle oinstall 292 Oct  7 10:58 libs.xml
+-rw-rw---- 1 oracle oinstall 300 Oct  7 10:58 comps.xml
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+======================================================================================
+
+ 
